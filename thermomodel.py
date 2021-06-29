@@ -3,8 +3,8 @@ N1 = 20 # кол-во промежутков на пластину
 N2 = N1
 t_end = 160 # окончание по времени
 
-lamda1 = 48 # теплопроводности матереала А
-lamda2 = 384 # теплопроводности матереала B
+lambda1 = 48 # теплопроводности матереала А
+lambda2 = 384 # теплопроводности матереала B
 
 ro1 = 7800 # плотность матереала А
 ro2 = 8800 # плотность матереала B
@@ -25,8 +25,8 @@ N = N1 + N2 + 1
 h = l / (N - 1)
 
 # определяем коэфициент температуропроводности:
-a1 = lamda1/(ro1 * c1)
-a2 = lamda2/(ro2 * c2)
+a1 = lambda1/(ro1 * c1)
+a2 = lambda2/(ro2 * c2)
 
 # определяем расчетный шаг сетки по времени:
 tau = t_end / 100.0
@@ -38,26 +38,26 @@ for i in range(N):
 
 # проводим интегрирование нестационарного уравнения теплопроводности
 time = 0
-alfa = [None] * N
+alpha = [None] * N
 beta = [None] * N
 while time < t_end:
     time = time + tau
 
     # определяем начальные прогоночные коэфициэнты на основе левого граничного условия
-    alfa[0] = 0.0
+    alpha[0] = 0.0
     beta[0] = tl
     
     # цикл с параметром для определения прогоночных коэфициентов по формуле 8 в первой части пластины
     for i in range(1, N1):
         # ai, bi, ci, fi коэфициент канонического представления СЛАУ с трехдиагональной матрицей
-        ai = lamda1 / pow(h, 2)
-        bi = 2.0 * lamda1 / pow(h, 2) + (ro1 * c1 / tau)
-        ci = lamda1 / pow(h, 2)
+        ai = lambda1 / pow(h, 2)
+        bi = 2.0 * lambda1 / pow(h, 2) + (ro1 * c1 / tau)
+        ci = lambda1 / pow(h, 2)
         fi = (-ro1) * c1 * t[i] / tau
 
         # alfa[i], beta[i] – прогоночные коэффициенты
-        alfa[i] = ai / (bi - ci * alfa[i-1])
-        beta[i] = (ci * beta[i-1]-fi) / (bi -ci * alfa[i-1])
+        alpha[i] = ai / (bi - ci * alpha[i-1])
+        beta[i] = (ci * beta[i-1]-fi) / (bi -ci * alpha[i-1])
 
     #  определяем прогоночные коэффициенты на границе раздела двух
     # частей, используем соотношения (28)
@@ -75,24 +75,24 @@ while time < t_end:
     # bt5 = lambda_2 + (lambda_1 * (1-alfa[n1]))
     # beta[n1 + 1] = (bt1 +  bt3) / ((bt4 * bt5) + (pow(h,2) * bt2))
 
-    alfa[N1]=2.0*a1*a2*tau*lamda2/(2.0*a1*a2*tau*(lamda2+lamda1 
-    *(1-alfa[N1-1]))+pow(h,2)*(a1*lamda2+a2*lamda1))
-    beta[N1]=(2.0*a1*a2*tau*lamda1*beta[N1-1]+pow(h,2)*(a1*lamda2+a2 
-    *lamda1)*t[N1])/(2.0*a1*a2*tau*(lamda2+lamda1 
-    *(1-alfa[N1-1]))+pow(h,2)*(a1*lamda2+a2*lamda1))
+    alpha[N1]=2.0*a1*a2*tau*lambda2/(2.0*a1*a2*tau*(lambda2+lambda1 
+    *(1-alpha[N1-1]))+pow(h,2)*(a1*lambda2+a2*lambda1))
+    beta[N1]=(2.0*a1*a2*tau*lambda1*beta[N1-1]+pow(h,2)*(a1*lambda2+a2 
+    *lambda1)*t[N1])/(2.0*a1*a2*tau*(lambda2+lambda1 
+    *(1-alpha[N1-1]))+pow(h,2)*(a1*lambda2+a2*lambda1))
     
     # цикл с параметром для определения прогоночных коэффициентов по
     # формуле (8) во второй части пластины
     for i in range(N1+1,N-1):
         # {ai, bi, ci, fi – коэффициенты канонического представления СЛАУ с
         # трехдиагональной матрицей
-        ai = lamda2/pow(h,2);
-        bi = 2.0*lamda2/pow(h,2)+ro2*c2/tau;
-        ci = lamda2/pow(h,2);
+        ai = lambda2/pow(h,2);
+        bi = 2.0*lambda2/pow(h,2)+ro2*c2/tau;
+        ci = lambda2/pow(h,2);
         fi = -ro2*c2*t[i]/tau;
         # alfa[i], beta[i] – прогоночные коэффициенты
-        alfa[i] = ai/(bi-ci*alfa[i-1]);
-        beta[i] = (ci*beta[i-1]-fi)/(bi-ci*alfa[i-1]);
+        alpha[i] = ai/(bi-ci*alpha[i-1]);
+        beta[i] = (ci*beta[i-1]-fi)/(bi-ci*alpha[i-1]);
 
     # определяем значение температуры на правой границе
     t[N-1] = tr
@@ -100,7 +100,7 @@ while time < t_end:
     # используя соотношение (7) определяем неизвестное поле
     # температуры
     for i in range(N-2,-1,-1):
-        t[i] = alfa[i] * t[i + 1] + beta[i]
+        t[i] = alpha[i] * t[i + 1] + beta[i]
 
 for i in range(len(t)):
      print(" {:.8f} {:.5f}".format(h * (i), t[i]))
